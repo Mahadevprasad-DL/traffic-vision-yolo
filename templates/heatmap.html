@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bengaluru Traffic Heatmap</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+  <style>
+    #trafficChart {
+      width: 100% !important;
+      height: 380px !important;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
+
+<!-- 🌆 Navbar -->
+<nav class="bg-slate-900/80 border-b border-slate-700 sticky top-0 z-50 backdrop-blur-md">
+  <div class="max-w-6xl mx-auto flex justify-between items-center px-6 py-3">
+    <div class="flex items-center text-xl font-bold text-white gap-2">
+      🚦 Urban Traffic Management
+    </div>
+
+    <div class="flex gap-6 text-slate-300">
+      <a href="{{ url_for('index') }}">Home</a>
+      <a href="{{ url_for('analytics') }}">Analytics</a>
+      <a href="{{ url_for('detect') }}">Video Analysis</a>
+      <a href="{{ url_for('predictions') }}">Predictions</a>
+      <a class="text-orange-400 font-semibold" href="{{ url_for('heatmap') }}">Heatmap</a>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN SECTION -->
+<div class="max-w-6xl mx-auto px-6 mt-10">
+
+  <!-- TITLE -->
+  <h1 class="text-3xl font-bold mb-4">Live Bengaluru Traffic Heatmap</h1>
+  <p class="text-slate-400 mb-6">Real-time congestion status for Bengaluru</p>
+
+  <!-- CHART CONTAINER -->
+  <div class="bg-slate-800/50 p-6 rounded-xl border border-slate-700 mb-8">
+    <canvas id="trafficChart"></canvas>
+    <p class="text-slate-400 mt-3 text-sm text-right">Auto-refreshes every 1 minute 🔄</p>
+  </div>
+
+  <!-- INCIDENT CARD -->
+  <div id="incidentCard" class="bg-slate-800/60 border border-slate-700 p-5 rounded-xl">
+    <h3 class="text-lg font-semibold text-white">In Bengaluru Area</h3>
+    <p id="incidentCount" class="text-slate-400 text-sm">Loading...</p>
+    <p class="text-orange-400 font-bold text-right">100%</p>
+  </div>
+</div>
+
+
+
+<!-- JS -->
+<script>
+const TOMTOM_API_KEY = "1vo0s7uUAWLbKwsfQY4IherNlc0hpKGk";
+const BBOX = "77.4500,12.8500,77.7500,13.1000"; // Bengaluru
+
+let chart;
+
+// Fetch live TomTom traffic incidents
+async function fetchLiveTraffic() {
+  try {
+    const url =
+      `https://api.tomtom.com/traffic/services/5/incidentDetails?bbox=${BBOX}&key=${TOMTOM_API_KEY}&language=en-GB&timeValidityFilter=present`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+    const incidents = data.incidents || [];
+
+    const total = incidents.length;
+
+    // Update card
+    document.getElementById("incidentCount").textContent =
+      `${total} Active Incidents`;
+
+    // Update Chart
+    updateChart(total);
+
+  } catch (err) {
+    console.error("Error fetching TomTom data:", err);
+  }
+}
+
+
+// Draw chart
+function updateChart(totalIncidents) {
+  const ctx = document.getElementById("trafficChart").getContext("2d");
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["In Bengaluru Area"],
+      datasets: [{
+        label: "Active Incidents",
+        data: [totalIncidents],
+        backgroundColor: "rgba(239,68,68,0.85)",
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: "x",
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: "Top 10 Congested Areas",
+          color: "#ffffff",
+          font: { size: 16 }
+        },
+        datalabels: {
+          color: "#fff",
+          anchor: "end",
+          align: "top",
+          formatter: () => "100%"
+        }
+      },
+      scales: {
+        x: { ticks: { color: "#cbd5e1" } },
+        y: {
+          beginAtZero: true,
+          ticks: { color: "#cbd5e1" }
+        }
+      }
+    },
+    plugins: [ChartDataLabels]
+  });
+}
+
+
+// Load immediately and every 60 seconds
+fetchLiveTraffic();
+setInterval(fetchLiveTraffic, 60000);
+</script>
+
+</body>
+</html>
