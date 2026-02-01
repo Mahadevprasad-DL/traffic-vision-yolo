@@ -1,0 +1,15 @@
+---
+- name: Build Docker image
+  command: docker build -t traffic-app:latest .
+  args:
+    chdir: "{{ playbook_dir }}/.."
+
+- name: Apply Kubernetes Deployment
+  command: kubectl apply -f kubernetes/deployment.yaml
+  args:
+    chdir: "{{ playbook_dir }}/.."
+
+- name: Apply Kubernetes Service
+  command: kubectl apply -f kubernetes/service.yaml
+  args:
+    chdir: "{{ playbook_dir }}/.."

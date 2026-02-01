@@ -1,0 +1,7 @@
+---
+- name: Deploy Traffic App to Kubernetes
+  hosts: local
+  become: false
+
+  roles:
+    - deploy_app

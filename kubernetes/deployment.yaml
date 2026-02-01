@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traffic-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: traffic
+  template:
+    metadata:
+      labels:
+        app: traffic
+    spec:
+      containers:
+        - name: traffic-container
+          image: YOUR_DOCKERHUB_USERNAME/traffic-app:latest
+          ports:
+            - containerPort: 5000
